@@ -1,0 +1,77 @@
+#include "access_point.h"
+#include "esp_log.h"
+#include "esp_wifi.h"
+#include "cstring"
+
+AccessPoint::AccessPoint(char* ssid, char* password, int maxConnections, bool hidden){
+    
+    this->ssid = ssid;
+    this->password = password;
+    this->maxConnections = maxConnections;
+    this->hidden = hidden;
+    ESP_LOGI(TAG, "AccessPoint created with SSID: %s, Password: %s, Max Connections: %d, Hidden: %s", 
+             ssid, password, maxConnections, hidden ? "true" : "false");
+}
+
+void AccessPoint::setSSID(const char* ssid){
+    if (ssid != nullptr) {
+        this->ssid = const_cast<char*>(ssid);
+        ESP_LOGI(TAG, "SSID set to: %s", ssid);
+    } else {
+        ESP_LOGE(TAG, "SSID cannot be null");
+    }
+}
+
+void AccessPoint::setPassword(const char* password){
+    if (password != nullptr) {
+        this->password = const_cast<char*>(password);
+        ESP_LOGI(TAG, "Password set to: %s", password);
+    } else {
+        ESP_LOGE(TAG, "Password cannot be null");
+    }
+}
+
+void AccessPoint::setMaxConnections(int maxConnections){
+    if (maxConnections > 0) {
+        this->maxConnections = maxConnections;
+        ESP_LOGI(TAG, "Max connections set to: %d", maxConnections);
+    } else {
+        ESP_LOGE(TAG, "Max connections must be greater than 0");
+    }
+}
+
+void AccessPoint::setHidden(bool hidden){
+    this->hidden = hidden;
+    ESP_LOGI(TAG, "Hidden mode set to: %s", hidden ? "true" : "false");
+}
+
+void AccessPoint::start(){
+
+    ESP_LOGI(TAG, "Setting up Access Point...");
+
+    wifi_config_t ap_config = {};
+    strcpy((char*)ap_config.ap.ssid, this->ssid);
+    strcpy((char*)ap_config.ap.password, this->password);
+    ap_config.ap.ssid_len = strlen(this->ssid);
+    ap_config.ap.max_connection = this->maxConnections;
+    ap_config.ap.authmode = WIFI_AUTH_WPA_WPA2_PSK;
+    ap_config.ap.ssid_hidden = this->hidden? 1 : 0;
+    
+
+    if (strlen((char *)ap_config.ap.password) == 0) {
+        ap_config.ap.authmode = WIFI_AUTH_OPEN;
+    }
+
+    esp_wifi_set_config(WIFI_IF_AP, &ap_config);
+    esp_wifi_start();
+
+    ESP_LOGI(TAG, "Access Point started. SSID: %s", ap_config.ap.ssid);
+
+}
+
+void AccessPoint::stop() {
+    ESP_LOGI(TAG, "Stopping Access Point...");
+    esp_wifi_stop();
+    esp_wifi_deinit();
+    ESP_LOGI(TAG, "Access Point stopped.");
+}
