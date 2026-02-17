@@ -78,7 +78,7 @@ To stop:
 ap.stop();
 ```
 
-##Notes
+## Notes
 
 SSID and password are stored as raw pointers (no deep copy).
 
